@@ -1,249 +1,221 @@
 // GSAPプラグインの登録
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
-// モバイル判定関数
-function isMobile() {
-    return window.innerWidth <= 768;
+// ============================================
+// 1. Lenis (慣性スクロール) の設定
+// これを入れるだけで「ルミネ」のような高級感が出ます
+// ============================================
+let lenis; // グローバル変数化
+
+function initLenis() {
+    // モバイル以外のみ慣性スクロールを有効にする場合
+    if (window.innerWidth > 768) {
+        lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            smooth: true,
+        });
+
+        // GSAPのTickerと同期（必須）
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time) => {
+            lenis.raf(time * 1000);
+        });
+        gsap.ticker.lagSmoothing(0);
+    }
 }
 
 // ============================================
-// ローディングアニメーション
+// 2. ローディングアニメーション
+// (いただいたコードをベースに調整)
 // ============================================
 document.addEventListener("DOMContentLoaded", () => {
+    initLenis(); // Lenis初期化
+
     const loader = document.getElementById("loader");
     const body = document.body;
     
     if (loader) {
-        // bodyにloadingクラスを追加（スクロール無効化）
         body.classList.add("loading");
         
-        // ページ読み込み完了を待つ
         window.addEventListener("load", () => {
-            // アニメーションが2回ループするまで待つ
-            // アニメーションは1秒×2回 = 2秒、最後のバーの遅延は0.27秒
-            // 合計で約2.27秒待機（少し早めるため2秒に短縮）
-            const animationDuration = 2000; // 2秒（1秒×2回）
-            const maxDelay = 270; // 最後のバーの遅延（0.27秒）
-            const totalWaitTime = animationDuration + maxDelay - 500; // 500ms早める
+            const animationDuration = 2000;
+            const maxDelay = 270;
+            const totalWaitTime = animationDuration + maxDelay - 500; 
             
             setTimeout(() => {
-                // フェードアウト前にアニメーションを完全に停止して位置を固定
                 const loadingBars = loader.querySelectorAll(".loading-bar");
                 const loadingContainer = loader.querySelector(".loading-container");
                 
-                // アニメーションを完全に停止し、位置を確実に固定
-                loadingBars.forEach((bar, index) => {
-                    // CSSアニメーションを強制的に停止
+                // アニメーション停止処理
+                loadingBars.forEach((bar) => {
                     bar.style.animation = "none";
-                    bar.style.animationPlayState = "paused";
-                    
-                    // transformをリセットして位置を固定
                     bar.style.transform = "translateX(0) scaleY(1)";
-                    bar.style.transformOrigin = "center center";
-                    
-                    // その他のスタイルをリセット
-                    bar.style.willChange = "auto";
-                    bar.style.position = "relative";
-                    bar.style.left = "0";
-                    bar.style.right = "auto";
-                    bar.style.marginLeft = "0";
-                    bar.style.marginRight = "0";
-                    // フェードアウト中も表示されるように
                     bar.style.opacity = "1";
-                    bar.style.visibility = "visible";
                 });
                 
-                // コンテナの位置を固定
                 if (loadingContainer) {
                     loadingContainer.style.transform = "translate(0, 0)";
-                    loadingContainer.style.willChange = "auto";
-                    loadingContainer.style.position = "relative";
-                    loadingContainer.style.left = "0";
-                    loadingContainer.style.right = "auto";
                 }
                 
-                // 少し待ってからフェードアウト（アニメーション停止を確実に）
                 requestAnimationFrame(() => {
-                    // ローディング全体をフェードアウト
                     gsap.to(loader, {
                         opacity: 0,
-                        duration: 1.5, // フェードアウト時間（1秒縮めた）
-                        ease: "power1.inOut", // より滑らかなイージング
+                        duration: 1.0, 
+                        ease: "power2.inOut",
                         onComplete: () => {
                             loader.classList.add("hidden");
+                            loader.style.display = "none"; // 完全に消す
                             body.classList.remove("loading");
                                 
-                                // ローディングが消えた後、0.5秒待ってからサイト全体をフェードイン
-                                setTimeout(() => {
-                                    // サイト全体の要素を取得（ローディング以外）
-                                    const hero = document.getElementById("hero");
-                                    const heroTitle = document.querySelector(".hero-title");
-                                    const scrollIndicator = document.querySelector(".scroll-indicator");
-                                    const track = document.getElementById("horizontal-track");
-                                    const footer = document.getElementById("footer");
-                                    
-                                    // heroセクションとtrackを先にフェードイン（背景として）
-                                    // タイトル、SCROLLインジケーター、フッターはCSSで初期状態がopacity: 0に設定されている
-                                    gsap.to([hero, track].filter(el => el !== null), {
-                                        opacity: 1,
-                                        duration: 1.5,
-                                        ease: "power2.out"
-                                    });
-                                    
-                                    // タイトル（andkou）、SCROLLインジケーター、フッターを同じタイミングでフェードイン
-                                    gsap.to([heroTitle, scrollIndicator, footer].filter(el => el !== null), {
-                                        opacity: 1,
-                                        duration: 1.2,
-                                        ease: "power2.out",
-                                        delay: 0.8, // 0.8秒遅らせて表示
-                                        onComplete: () => {
-                                            // ローディング完了後にメインアニメーションを初期化
-                                            initMainAnimations();
-                                        }
-                                    });
-                                }, 500); // 0.5秒待機
+                            // メインコンテンツのフェードイン開始
+                            setTimeout(() => {
+                                revealSiteContent();
+                            }, 100);
                         }
                     });
                 });
-            }, totalWaitTime); // アニメーションが3回ループするまで待機
+            }, totalWaitTime);
         });
     } else {
-        // ローディング要素がない場合は直接メインアニメーションを初期化
         window.addEventListener("load", () => {
-            initMainAnimations();
+            revealSiteContent();
         });
     }
 });
 
-// ============================================
-// メインアニメーション初期化
-// ============================================
-function initMainAnimations() {
-    // 要素を取得
-    const hero = document.getElementById("hero");
+// サイト表示時の演出
+function revealSiteContent() {
     const heroTitle = document.querySelector(".hero-title");
-    const track = document.getElementById("horizontal-track");
-    const content = document.querySelector(".horizontal-content");
-
-    // モバイルの場合はGSAPアニメーションを無効化
-    if (isMobile()) {
-        // モバイルではScrollTriggerを無効化
-        return;
-    }
-
-    // 1. Heroセクションのフェードアウトアニメーション（上に消える）
-    gsap.to(heroTitle, {
-        y: -100,
-        opacity: 0,
-        duration: 1,
-        ease: "power2.inOut",
-        scrollTrigger: {
-            trigger: hero,
-            start: "top top",
-            end: "bottom top",
-            scrub: 1
+    const scrollIndicator = document.querySelector(".scroll-indicator");
+    const footer = document.getElementById("footer");
+    
+    // ヒーロータイトルなどをふわっと表示
+    gsap.to([heroTitle, scrollIndicator, footer], {
+        opacity: 1,
+        y: 0, // CSSで translateY(50px) などを設定しておくと下から浮き上がります
+        duration: 1.5,
+        ease: "power3.out",
+        stagger: 0.2, // 順番に表示
+        onComplete: () => {
+            initMainAnimations(); // アニメーション開始
         }
     });
-
-    // 2. 横スクロールアニメーションの設定（PCのみ）
-    if (content && track) {
-        // 横スクロールの距離を計算
-        const getScrollDistance = () => {
-            return content.scrollWidth - window.innerWidth;
-        };
-        
-        const scrollTween = gsap.to(content, {
-            x: () => -getScrollDistance(), // コンテンツの端まで左に動かす
-            ease: "none", // 一定の速度で
-            scrollTrigger: {
-                trigger: track, // このエリアに来たら発動
-                pin: true,      // 画面を固定する
-                pinSpacing: true, // pin解除後のスペースを確保（横スクロールを正常に動作させるため）
-                scrub: 1,       // スクロールに合わせて滑らかに動く
-                start: "top top", // 画面の一番上に来たらスタート
-                end: () => "+=" + getScrollDistance(), // スクロール量（横幅分だけ縦にスクロールさせる）
-                invalidateOnRefresh: true, // リサイズ時に再計算
-                anticipatePin: 1, // pinの動作をスムーズにする
-                onUpdate: (self) => {
-                    // 横スクロールの進行度に応じて矢印をフェードアウト
-                    const progress = self.progress;
-                    const horizontalIndicator = document.querySelector('.horizontal-scroll-indicator');
-                    if (horizontalIndicator) {
-                        // スクロールが進むほど矢印をフェードアウト（80%で完全に非表示）
-                        const opacity = Math.max(0, 1 - (progress / 0.8));
-                        gsap.to(horizontalIndicator, {
-                            opacity: opacity,
-                            duration: 0.1,
-                            ease: "none"
-                        });
-                    }
-                }
-            }
-        });
-        
-        // 3. 横スクロールエリアの各要素をふわっとフェードイン（CSSアニメーション使用）
-        // item-introはアニメーションなし
-        const horizontalItems = content.querySelectorAll('.item-work, .item-services, .item-blog, .item-profile, .item-contact');
-        
-        horizontalItems.forEach((item, index) => {
-            // fadeupクラスを追加
-            item.classList.add('anim-box', 'fadeup');
-            
-            // 横スクロールの進行に応じてアニメーションを発動
-            ScrollTrigger.create({
-                trigger: track,
-                start: "top top",
-                end: () => "+=" + getScrollDistance(),
-                scrub: 0.5,
-                onUpdate: (self) => {
-                    // 要素の現在の位置を取得（スクロールを考慮）
-                    const itemRect = item.getBoundingClientRect();
-                    const itemScreenLeft = itemRect.left;
-                    const itemScreenRight = itemRect.right;
-                    const itemWidth = itemRect.width;
-                    
-                    // 画面の幅を取得
-                    const windowWidth = window.innerWidth;
-                    
-                    // 要素が画面に入っているかチェック
-                    // 要素の中心が画面の左端から右端の80%以内に入ったら発動
-                    const itemCenter = itemScreenLeft + itemWidth / 2;
-                    const triggerPoint = windowWidth * 0.7; // 画面の70%の位置で発動
-                    
-                    const isVisible = itemScreenRight > 0 && itemScreenLeft < windowWidth;
-                    const isTriggered = itemCenter < triggerPoint && itemCenter > 0;
-                    
-                    // 要素が画面に入ってトリガーポイントに来たらアニメーションを発動（1回だけ）
-                    if (isVisible && isTriggered && !item.classList.contains('is-animated')) {
-                        item.classList.add('is-animated');
-                    }
-                }
-            });
-        });
-    }
-
-    // 3. ヒーローエリアのスクロールリンク
-    // SCROLLボタンを押した時に、スムーズに横スクロールエリアへ移動
-    const scrollIndicator = document.querySelector(".scroll-indicator");
-    if (scrollIndicator && track) {
-        scrollIndicator.addEventListener("click", () => {
-            const trackPosition = track.getBoundingClientRect().top + window.pageYOffset;
-            gsap.to(window, { 
-                duration: 1.5, 
-                scrollTo: trackPosition,
-                ease: "power2.inOut"
-            });
-        });
-    }
 }
 
-// リサイズ時にScrollTriggerを更新
-let resizeTimer;
-window.addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-        if (!isMobile()) {
-            ScrollTrigger.refresh();
+
+// ============================================
+// 3. メインアニメーション初期化 (PC / Mobile分岐)
+// ScrollTrigger.matchMedia を使うのが最も現代的でバグが少ない方法です
+// ============================================
+function initMainAnimations() {
+    
+    ScrollTrigger.matchMedia({
+        
+        // ------------------------------------------------
+        // PC表示 (769px以上)
+        // ------------------------------------------------
+        "(min-width: 769px)": function() {
+            const track = document.getElementById("horizontal-track");
+            const content = document.querySelector(".horizontal-content");
+            const arrow = document.querySelector('.horizontal-scroll-indicator');
+
+            // (A) 横スクロールのメイン処理
+            const scrollAmount = content.offsetWidth - window.innerWidth;
+            
+            const scrollTween = gsap.to(content, {
+                x: -scrollAmount, 
+                ease: "none", // 慣性はLenisに任せる
+                scrollTrigger: {
+                    trigger: "#horizontal-track",
+                    pin: true,
+                    start: "top top",
+                    end: "+=" + scrollAmount,
+                    scrub: 1, // 少し遅れて追従する滑らかさ
+                    invalidateOnRefresh: true,
+                    anticipatePin: 1,
+                    onUpdate: (self) => {
+                        // 矢印のフェードアウト
+                        if(arrow) arrow.style.opacity = 1 - self.progress * 2;
+                    }
+                }
+            });
+
+            // (B) 重要な改善点：containerAnimationを使ったフェードイン
+            // 以前の getBoundingClientRect ループより圧倒的に軽いです
+            const fadeElements = document.querySelectorAll('.item-intro, .item-work, .item-services, .item-blog, .item-profile, .item-contact');
+            
+            fadeElements.forEach((el) => {
+                // 初期状態セット
+                gsap.set(el, { opacity: 0, y: 50 });
+
+                gsap.to(el, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.8,
+                    ease: "power2.out",
+                    scrollTrigger: {
+                        trigger: el,
+                        containerAnimation: scrollTween, // ★ここが重要！横スクロールと連動
+                        start: "left 80%", // 画面の80%の位置に来たら
+                        toggleActions: "play none none reverse"
+                    }
+                });
+            });
+
+            // (C) ルミネ風パララックス（画像の奥行き）
+            // 画像(.work-img)を、親要素の移動よりも「逆方向」や「遅く」動かす
+            const parallaxImages = document.querySelectorAll(".work-img, .profile-img");
+            parallaxImages.forEach((img) => {
+                gsap.to(img, {
+                    x: 200, // 画像を右へ動かす（コンテンツは左へ行くので、視差が生まれる）
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: img,
+                        containerAnimation: scrollTween, // ★ここも連動
+                        start: "left right", // 画面右端に入ったら
+                        end: "right left",   // 画面左端へ消えたら
+                        scrub: true // 常にスクロール位置と同期
+                    }
+                });
+            });
+
+            // (D) SCROLLボタンの挙動
+            const scrollIndicator = document.querySelector(".scroll-indicator");
+            if (scrollIndicator) {
+                scrollIndicator.onclick = () => {
+                    // Lenisを使っている場合はlenis.scrollToを使うのがベスト
+                    if(lenis) {
+                        lenis.scrollTo('#horizontal-track');
+                    } else {
+                        window.scrollTo({ top: track.offsetTop, behavior: 'smooth' });
+                    }
+                };
+            }
+        },
+
+        // ------------------------------------------------
+        // スマホ表示 (768px以下)
+        // ------------------------------------------------
+        "(max-width: 768px)": function() {
+            // シンプルな縦スクロールフェードイン
+            const fadeElements = document.querySelectorAll('.item-work, .item-services, .item-profile, .item-blog');
+            
+            fadeElements.forEach((el) => {
+                gsap.fromTo(el, 
+                    { opacity: 0, y: 30 },
+                    {
+                        opacity: 1, 
+                        y: 0, 
+                        duration: 0.8,
+                        scrollTrigger: {
+                            trigger: el,
+                            start: "top 85%"
+                        }
+                    }
+                );
+            });
         }
-    }, 250);
-});
+    });
+}
