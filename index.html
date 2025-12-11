@@ -10,16 +10,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- GSAP CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
     <!-- Stylesheet -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <!-- ========================================
-         LOADING ANIMATION (将来: loading.php)
+         LOADING ANIMATION
          ======================================== -->
     <div id="loader" class="loading">
         <div class="loading-container">
@@ -31,14 +27,12 @@
     </div>
     
     <!-- ========================================
-         NEWS TICKER (将来: news-ticker.php)
-         お知らせスクロールバー（トップページ上部）
+         NEWS TICKER
          ======================================== -->
     <div id="news-ticker">
         <div class="news-ticker-container">
             <span class="news-ticker-label">NEWS</span>
             <div class="news-ticker-content">
-                <!-- お知らせアイテムを2セット用意（ループ用） -->
                 <div class="news-ticker-item">
                     <span class="news-ticker-date">2025.01.01</span>
                     <span class="news-ticker-text">お知らせのタイトルが入ります</span>
@@ -51,14 +45,7 @@
                     <span class="news-ticker-date">2025.01.03</span>
                     <span class="news-ticker-text">お知らせのタイトルが入ります</span>
                 </div>
-                <!-- WordPressループでお知らせを表示（2回繰り返す） -->
-                <!-- <?php if (have_posts()) : while (have_posts()) : the_post(); ?> -->
-                <!-- <div class="news-ticker-item">
-                    <span class="news-ticker-date"><?php echo get_the_date('Y.m.d'); ?></span>
-                    <span class="news-ticker-text"><?php the_title(); ?></span>
-                </div> -->
-                <!-- <?php endwhile; endif; ?> -->
-                <!-- ループ用に同じ内容を2セット表示 -->
+                <!-- ループ用 -->
                 <div class="news-ticker-item">
                     <span class="news-ticker-date">2025.01.01</span>
                     <span class="news-ticker-text">お知らせのタイトルが入ります</span>
@@ -110,6 +97,7 @@
                 </div>
                 <p class="work-caption">Project Name 02<br><span>Web Design</span></p>
             </div>
+
             <div class="item-work work-03">
                 <div class="parallax-wrap">
                     <img src="images/work03.jpg" alt="Work 03" class="work-img">
@@ -145,29 +133,22 @@
                 </div>
             </div>
 
-            <!-- ========================================
-                 BLOG SECTION (将来: blog.php)
-                 ブログエリア（Serviceの横）
-                 ======================================== -->
             <div class="item-blog">
                 <p class="blog-label">BLOG</p>
                 <div class="blog-list">
-                    <!-- WordPressループでブログ記事を表示 -->
-                    <!-- <?php if (have_posts()) : while (have_posts()) : the_post(); ?> -->
                     <article class="blog-item">
                         <a href="#" class="blog-link">
                             <span class="blog-date">2025.01.01</span>
                             <h3 class="blog-title">ブログ記事のタイトルが入ります</h3>
                         </a>
                     </article>
-                    <!-- <?php endwhile; endif; ?> -->
                 </div>
             </div>
 
            <div class="item-profile">
                 <div class="profile-img-box">
                     <div class="parallax-wrap">
-                    <img src="images/profile.jpg" alt="Profile" class="profile-img">
+                        <img src="images/profile.jpg" alt="Profile" class="profile-img">
                     </div>
                 </div>
     
@@ -186,13 +167,26 @@
     </section>
     
     <!-- ========================================
-         FOOTER SECTION (将来: footer.php)
+         FOOTER SECTION
          ======================================== -->
     <footer id="footer">
         <small>&copy; 2025 andkou. All Rights Reserved.</small>
     </footer>
     
+    <!-- ========================================
+         SCRIPTS
+         順番が重要です：GSAP関連 -> Lenis -> 自作JS
+         ======================================== -->
+    <!-- 1. GSAP Core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <!-- 2. ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <!-- 3. ScrollToPlugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
+    <!-- 4. Lenis (慣性スクロール) ★これを追加しました -->
+    <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+    
+    <!-- 5. Main Script -->
     <script src="js/script.js"></script>
 </body>
 </html>
-
