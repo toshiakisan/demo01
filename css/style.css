@@ -536,12 +536,21 @@ body.loading #footer {
     align-items: center;
     gap: 20px;
 }
-/* 画像を枠いっぱいに表示 */
 .work-img, .profile-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* 比率を保ったままトリミング */
+    /* 枠より一回り大きく配置する */
+    width: 130%; 
+    height: 130%;
+    
+    /* 拡大した分、中心を合わせるためにマイナスのマージンを入れる */
+    margin-left: -15%;
+    margin-top: -15%;
+    
+    object-fit: cover;
     display: block;
+    will-change: transform;
+    
+    /* scaleは削除（width/heightで直接大きくした方が計算しやすいため） */
+    /* transform: scale(1.2); ←削除 */
 }
 /* ============================================
    5. Mobile Responsive (スマホ対応・強化版)
