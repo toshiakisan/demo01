@@ -536,7 +536,7 @@ body.loading #footer {
     align-items: center;
     gap: 20px;
 }
-.work-img, .profile-img {
+.work-img {
     /* 枠より一回り大きく配置する */
     width: 130%; 
     height: 130%;
@@ -548,7 +548,14 @@ body.loading #footer {
     object-fit: cover;
     display: block;
     will-change: transform;
+.profile-img {
+    width: 160%;       /* 他は130%ですが、ここだけ160%にします */
+    height: 160%;
     
+    /* 拡大した分、中心位置を調整 */
+    margin-left: -30%; /* (160% - 100%) ÷ 2 */
+    margin-top: -30%;
+}    
     /* scaleは削除（width/heightで直接大きくした方が計算しやすいため） */
     /* transform: scale(1.2); ←削除 */
 }
