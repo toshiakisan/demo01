@@ -1,0 +1,676 @@
+@charset "UTF-8";
+
+/* ============================================
+   1. Base Styles (基本設定)
+   ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    overflow-x: hidden;
+    width: 100%;
+    /* スクロールバーの幅を常に確保してレイアウトシフトを防ぐ */
+    scrollbar-gutter: stable;
+    overflow-y: scroll; /* 常にスクロールバーを表示（幅を確保） */
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #F5F5F5; /* 統一した背景色 */
+    color: #000;
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
+/* ローディング中はスクロールを無効化 */
+body.loading {
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* ============================================
+   LOADER (ローディングアニメーション)
+   ============================================ */
+#loader.loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #F5F5F5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+    /* 位置を確実に中央に固定 */
+    transform: translate(0, 0);
+    will-change: opacity;
+}
+
+/* ローディングバーをラップするコンテナ */
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px; /* バー同士の間隔 */
+    position: relative;
+    /* 位置を確実に固定 */
+    transform: translate(0, 0);
+    will-change: transform;
+}
+
+#loader.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* ローディングが非表示になったらアニメーションを停止 */
+#loader.hidden .loading-bar,
+.loading-bar-frozen {
+    animation: none !important;
+    animation-play-state: paused !important;
+    transform: translateX(0) scaleY(1) !important; /* アニメーション停止時に位置とサイズを固定 */
+    transform-origin: center center !important;
+    position: relative !important;
+    will-change: auto !important;
+}
+
+#loader.hidden .loading-container {
+    transform: translate(0, 0) !important; /* 位置を確実に固定 */
+}
+
+/* ローディング中はサイト全体を非表示 */
+body.loading #hero,
+body.loading #horizontal-track {
+    opacity: 0;
+}
+
+/* ローディング中はタイトル、SCROLLインジケーター、フッターも非表示 */
+body.loading .hero-title,
+body.loading .scroll-indicator,
+body.loading #footer {
+    opacity: 0;
+}
+
+/* ============================================
+   FADEUP ANIMATION (横スクロール要素用)
+   ============================================ */
+.anim-box.fadeup {
+    transform: translateY(30px);
+    opacity: 0;
+}
+
+.anim-box.fadeup.is-animated {
+    animation: fadeup 1s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+@keyframes fadeup {
+    0% {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.loading-bar {
+    display: inline-block;
+    width: 4px;
+    height: 18px;
+    border-radius: 4px;
+    animation: loading 1s ease-in-out 2; /* 2回ループ */
+    transform-origin: center center; /* アニメーションの中心点を中央に固定 */
+    /* 位置を確実に固定 */
+    position: relative;
+    will-change: transform;
+    /* X軸方向の位置を固定 */
+    transform: translateX(0) scaleY(1);
+    vertical-align: bottom; /* バーを下部に揃える */
+}
+
+.loading-bar:nth-child(1) {
+    background-color: #3498db;
+    animation-delay: 0;
+}
+
+.loading-bar:nth-child(2) {
+    background-color: #c0392b;
+    animation-delay: 0.09s;
+}
+
+.loading-bar:nth-child(3) {
+    background-color: #f1c40f;
+    animation-delay: 0.18s;
+}
+
+.loading-bar:nth-child(4) {
+    background-color: #27ae60;
+    animation-delay: 0.27s;
+}
+
+@keyframes loading {
+    0% {
+        transform: scaleY(1);
+    }
+    20% {
+        transform: scaleY(2.2);
+    }
+    40% {
+        transform: scaleY(1);
+    }
+}
+
+/* ============================================
+   2. #hero (トップ画面)
+   ============================================ */
+#hero {
+    width: 100%;
+    height: 100vh; /* 画面いっぱいの高さ */
+    display: flex;
+    justify-content: center; /* 左右中央 */
+    align-items: center;     /* 上下中央 */
+    position: relative;
+    margin-top: 40px; /* お知らせスクロールバーの高さ分だけ下に */
+}
+
+.hero-title {
+    font-size: 120px; /* 巨大なタイトル */
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    opacity: 0; /* 初期状態は非表示（ローディング後にフェードイン） */
+    transform: translateY(0); /* 初期位置 */
+    will-change: transform, opacity; /* パフォーマンス最適化 */
+}
+
+/* スクロール誘導 (SCROLL) - PC表示のみ */
+.scroll-indicator {
+    position: absolute;
+    bottom: 40px;      /* 下からの距離 */
+    left: 50%;
+    transform: translateX(-50%); /* 完全に中央に寄せる */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    opacity: 0; /* 初期状態は非表示（ローディング後にフェードイン） */
+}
+
+.scroll-text {
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+}
+
+.scroll-line {
+    width: 1px;
+    height: 60px; /* 線の長さ */
+    background-color: #000;
+}
+
+/* ============================================
+   3. #news-ticker (お知らせスクロールバー)
+   ============================================ */
+#news-ticker {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #000;
+    color: #fff;
+    z-index: 1000;
+    overflow: hidden;
+    height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+.news-ticker-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.news-ticker-label {
+    background-color: #fff;
+    color: #000;
+    padding: 0 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.news-ticker-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+    mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
+    animation: tickerScroll 30s linear infinite;
+}
+
+.news-ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 20px;
+    padding: 0 40px;
+    white-space: nowrap;
+}
+
+.news-ticker-date {
+    font-size: 12px;
+    color: #999;
+    min-width: 80px;
+}
+
+.news-ticker-text {
+    font-size: 14px;
+}
+
+@keyframes tickerScroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+/* ============================================
+   4. #footer (フッター)
+   ============================================ */
+#footer {
+    width: 100%;
+    padding: 40px 0;
+    text-align: center;
+    background-color: #F5F5F5;
+    opacity: 0; /* 初期状態は非表示（ローディング後にフェードイン） */
+}
+
+#footer small {
+    font-size: 12px;
+    color: #666;
+}
+
+/* PC表示時：フッターを固定表示（被せて表示） */
+@media screen and (min-width: 769px) {
+    #footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        z-index: 100; /* 他の要素の上に表示 */
+        background-color: #F5F5F5;
+    }
+}
+/* ============================================
+   4. Horizontal Layout (Figma座標の再現)
+   ============================================ */
+
+/* トラック全体の設定 */
+#horizontal-track {
+    width: 100%;
+    height: 100vh;
+    background-color: #F5F5F5;
+    position: relative;
+    overflow: hidden; /* はみ出し防止 */
+    display: block;   /* 表示させる！ */
+}
+
+/* 横スクロール導線（横矢印） - PC表示のみ */
+.horizontal-scroll-indicator {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* クリックを無効化 */
+}
+
+.scroll-arrow {
+    font-size: 24px;
+    color: #000;
+    opacity: 0.6;
+    animation: scrollArrowPulse 2s ease-in-out infinite;
+}
+
+@keyframes scrollArrowPulse {
+    0%, 100% {
+        transform: translateX(0);
+        opacity: 0.6;
+    }
+    50% {
+        transform: translateX(10px);
+        opacity: 1;
+    }
+}
+
+/* モバイル表示では非表示 */
+@media screen and (max-width: 768px) {
+    .horizontal-scroll-indicator {
+        display: none !important;
+    }
+}
+
+/* 超横長コンテナ */
+.horizontal-content {
+    width: 10000px; /* ブログエリア追加に伴い幅を拡張（Contactが表示されるように） */
+    height: 100%;
+    position: relative; /* 中身を絶対配置するための基準 */
+    display: flex; /* 高さ合わせのため */
+    will-change: transform; /* パフォーマンス最適化 */
+}
+
+/* PC表示を確実に保つ（モバイルメディアクエリより前に配置） */
+@media screen and (min-width: 769px) {
+    html, body {
+        overflow-x: hidden !important;
+    }
+    
+    #horizontal-track {
+        overflow: hidden !important;
+    }
+    
+    .horizontal-content {
+        width: 10000px !important;
+        display: flex !important;
+        flex-direction: row !important;
+    }
+    
+    .item-intro, 
+    .item-work, 
+    .item-services, 
+    .item-blog,
+    .item-profile, 
+    .item-contact {
+        position: absolute !important;
+    }
+}
+
+/* 共通パーツ：画像の箱（グレーのアタリ） */
+.work-img-box, .profile-img-box {
+    width: 100%;
+    height: 100%;
+    background-color: #ccc; /* 仮のグレー */
+}
+
+/* --- Zone A: Intro --- */
+.item-intro {
+    position: absolute;
+    top: 320px;
+    left: 200px; /* Figmaの開始位置 */
+}
+.intro-title { font-size: 80px; line-height: 1.1; }
+.intro-label { font-size: 14px; margin-bottom: 20px; }
+
+/* --- Zone B: Works (絶対配置で並べる) --- */
+.item-work {
+    position: absolute;
+    top: 150px; /* Works共通のY座標(一部調整可) */
+}
+.work-caption { margin-top: 15px; font-size: 14px; line-height: 1.4; }
+.work-caption span { color: #666; font-size: 12px; }
+
+/* 各ワークの座標とサイズ (Figma通り) */
+.work-01 { left: 1700px; width: 700px; height: 500px; }
+.work-02 { left: 2600px; width: 400px; height: 600px; }
+.work-03 { left: 3200px; width: 800px; height: 530px; top: 300px; /* これだけ少し下げる */ }
+.work-04 { left: 4600px; width: 450px; height: 600px; }
+
+/* --- Zone C: Services --- */
+.item-services {
+    position: absolute;
+    top: 150px;
+    left: 5600px; /* Start position */
+}
+.services-label { font-size: 14px; margin-bottom: 60px; letter-spacing: 0.1em; }
+.services-container { display: flex; gap: 100px; } /* 3本柱の間隔 */
+
+.service-col { width: 350px; }
+.service-line { width: 100%; height: 1px; background: #000; margin-bottom: 20px; }
+.service-col h3 { font-size: 32px; margin-bottom: 20px; }
+.service-col p { font-size: 14px; line-height: 1.8; }
+
+/* --- Zone C-2: Blog (Serviceの横) --- */
+.item-blog {
+    position: absolute;
+    top: 150px;
+    left: 7000px; /* Serviceの右側に配置（被らないように調整） */
+    width: 400px;
+}
+
+.blog-label {
+    font-size: 14px;
+    margin-bottom: 60px;
+    letter-spacing: 0.1em;
+}
+
+.blog-list {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.blog-item {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 30px;
+}
+
+.blog-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.blog-link {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: #000;
+    transition: opacity 0.3s ease;
+}
+
+.blog-link:hover {
+    opacity: 0.7;
+}
+
+.blog-date {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.blog-title {
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+/* --- Zone D: Profile --- */
+.item-profile {
+    position: absolute;
+    top: 250px;
+    left: 7500px; /* ブログエリア追加に伴い右に移動 */
+    display: flex;
+    gap: 40px;
+}
+.profile-img-box { width: 360px; height: 480px; }
+.profile-text { width: 400px; padding-top: 50px; }
+.profile-text h3 { font-size: 24px; margin-bottom: 5px; }
+.job-title { font-size: 14px; color: #666; margin-bottom: 30px; }
+
+/* --- Contact Goal --- */
+.item-contact {
+    position: absolute;
+    top: 450px;
+    left: 8500px; /* ブログエリア追加に伴い右に移動 */
+}
+.contact-link {
+    font-size: 80px;
+    font-weight: bold;
+    text-decoration: none;
+    color: #000;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+/* 画像を枠いっぱいに表示 */
+.work-img, .profile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 比率を保ったままトリミング */
+    display: block;
+}
+/* ============================================
+   5. Mobile Responsive (スマホ対応・強化版)
+   ============================================ */
+@media screen and (max-width: 768px) {
+    /* --- 画面全体の横揺れを完全ブロック --- */
+    html, body {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        position: relative;
+        max-width: 100vw;
+    }
+
+    /* --- Heroエリア --- */
+    .hero-title {
+        font-size: 15vw; /* 画面幅に合わせて自動調整 */
+    }
+
+    /* --- SCROLLインジケーターは非表示 --- */
+    .scroll-indicator {
+        display: none !important;
+    }
+
+    /* --- トラックとコンテナ --- */
+    #horizontal-track {
+        height: auto !important;
+        overflow: hidden !important; /* はみ出しを隠す */
+        position: relative !important;
+    }
+
+    .horizontal-content {
+        width: 100% !important; /* 強制的に画面幅に合わせる */
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding-bottom: 100px;
+        overflow-x: hidden !important;
+        transform: none !important; /* GSAPのtransformをリセット */
+    }
+
+    /* --- 全アイテム共通のリセット（強力版） --- */
+    .item-intro, 
+    .item-work, 
+    .item-services, 
+    .item-blog,
+    .item-profile, 
+    .item-contact {
+        position: relative !important; 
+        top: auto !important;
+        left: auto !important;
+        width: 100% !important; /* PCの固定幅を強制リセット */
+        height: auto !important;
+        margin-bottom: 80px;
+        padding: 0 20px;
+        box-sizing: border-box; /* パディングを含めて100%にする */
+        transform: none !important; /* GSAPのtransformをリセット */
+    }
+
+    /* --- 個別の固定幅も強制リセット --- */
+    .work-01, .work-02, .work-03, .work-04 {
+        width: 100% !important;
+        height: auto !important;
+        left: auto !important;
+        top: auto !important;
+    }
+
+    /* --- Works --- */
+    .work-img-box, .work-img {
+        width: 100% !important;
+        height: 300px; 
+        object-fit: cover;
+    }
+
+    /* --- Services --- */
+    .services-container {
+        flex-direction: column !important;
+        gap: 40px;
+        width: 100% !important;
+    }
+    .service-col { width: 100% !important; }
+
+    /* --- Profile --- */
+    .item-profile {
+        flex-direction: column !important;
+    }
+    .profile-img {
+        width: 100% !important;
+        height: auto !important;
+        max-height: 400px;
+    }
+    .profile-text { width: 100% !important; padding-top: 20px; }
+
+    /* --- Contact --- */
+    .contact-link { 
+        font-size: 12vw; 
+        justify-content: center; 
+    }
+
+    /* --- Blog --- */
+    .item-blog {
+        width: 100% !important;
+        left: auto !important;
+    }
+
+    .blog-list {
+        gap: 20px;
+    }
+
+    /* --- News Ticker --- */
+    #news-ticker {
+        height: 35px;
+    }
+
+    .news-ticker-label {
+        padding: 0 15px;
+        font-size: 11px;
+    }
+
+    .news-ticker-item {
+        padding: 0 20px;
+        gap: 15px;
+    }
+
+    .news-ticker-date {
+        font-size: 11px;
+        min-width: 70px;
+    }
+
+    .news-ticker-text {
+        font-size: 12px;
+    }
+}
