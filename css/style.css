@@ -674,3 +674,27 @@ body.loading #footer {
         font-size: 12px;
     }
 }
+/* ============================================
+   パララックス（視差効果）用の追加スタイル
+   ============================================ */
+
+/* 画像の「枠」。これがマスクの役割をします */
+.parallax-wrap {
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* ★重要: 画像が動いた的にはみ出た部分を隠す */
+    display: block;
+    position: relative;
+}
+
+/* 中の画像 */
+.work-img, .profile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    
+    /* ★重要: パララックスで動かす余白を作るため、最初から少し拡大しておく */
+    transform: scale(1.2); 
+    will-change: transform; /* アニメーションのなめらかさを向上 */
+}
