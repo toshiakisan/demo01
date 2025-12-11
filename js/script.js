@@ -218,7 +218,7 @@ function initMainAnimations() {
             const parallaxImages = document.querySelectorAll(".work-img, .profile-img");
             parallaxImages.forEach((img) => {
                 gsap.to(img, {
-                    x: 200, 
+                    x: 100, 
                     ease: "none",
                     scrollTrigger: {
                         trigger: img,
